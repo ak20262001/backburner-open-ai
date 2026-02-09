@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Retail - Premium E-Commerce with Chat">
+    <title>Nexus Retail | Premium E-Commerce with Chat</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f5f7ff',
+                            100: '#ebf0ff',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        },
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        // Cek apakah user punya tiket "fromOpening"?
+        if (!sessionStorage.getItem('fromOpening')) {
+            // Jika TIDAK punya tiket (misal: hasil refresh atau ketik link langsung)
+            // Tendang balik ke opening
+            window.location.href = 'Opening.html'; 
+        } else {
+            // Jika PUNYA tiket
+            // Robek tiketnya (Hapus session), supaya kalau direfresh dia dianggap tidak punya tiket lagi
+            sessionStorage.removeItem('fromOpening');
+        }
+    </script>
+
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        /* Chat Messages Styling */
+        .message-item {
+            display: flex;
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        .message-item.sender {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            word-wrap: break-word;
+        }
+
+        .message-item.sender .message-bubble {
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 16px 4px 16px 16px;
+        }
+
+        .message-item.receiver .message-bubble {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            border-radius: 4px 16px 16px 16px;
+        }
+
+        .dark .message-item.receiver .message-bubble {
+            background-color: #334155;
+            color: #f1f5f9;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            opacity: 0.9;
+        }
+
+        .message-text {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Toast Notification */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-notification {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+
+        /* Status Badge */
+        .online-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 dark:bg-dark-bg dark:text-slate-100 transition-colors duration-300 font-sans">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 glass border-b border-slate-200 dark:border-dark-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
+                    <div class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-600/30">
+                        <i class="fa-solid fa-bolt text-white text-xl"></i>
+                    </div>
+                    <span class="font-bold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-violet-600">NEXUS</span>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="hidden lg:flex flex-1 max-w-xl mx-12">
+                    <div class="relative w-full group">
+                        <input type="text" id="searchInput" placeholder="Cari barang impian Anda..."
+                            class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-dark-border dark:bg-slate-800 focus:ring-2 focus:ring-brand-600 transition-all outline-none text-sm">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-600 transition-colors"></i>
+                    </div>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-2 sm:gap-6">
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                    </button>
+
+                    <!-- Cart Button -->
+                    <button onclick="toggleCart()" class="relative group p-2.5">
+                        <i class="fa-solid fa-bag-shopping text-xl group-hover:text-brand-600 transition-colors"></i>
+                        <span id="cartBadge" class="absolute -top-1 -right-1 h-5 w-5 bg-brand-600 border-2 border-white dark:border-dark-bg rounded-full text-[10px] font-bold text-white flex items-center justify-center transform scale-0 transition-transform">0</span>
+                    </button>
+
+                    <!-- Auth Container -->
+                    <div id="auth-container">
+                        <button onclick="renderLoginModal()" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 transition">
+                            <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Drawer -->
+    <div id="cartDrawer" class="fixed inset-0 z-[60] pointer-events-none">
+        <div id="cartOverlay" onclick="toggleCart()" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div id="cartContent" class="absolute right-0 top-0 h-full w-full max-w-md bg-white dark:bg-dark-card shadow-2xl translate-x-full transition-transform duration-500 pointer-events-auto flex flex-col">
+            <!-- Cart Header -->
+            <div class="p-6 border-b dark:border-dark-border flex justify-between items-center">
+                <h3 class="text-xl font-bold">Keranjang Belanja</h3>
+                <button onclick="toggleCart()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Cart Items -->
+            <div id="cartItems" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+            <!-- Cart Footer -->
+            <div class="p-6 border-t dark:border-dark-border space-y-4">
+                <div class="flex justify-between items-center text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    <span>Total Item: <span id="totalItemCount" class="font-bold text-brand-600">0</span></span>
+                </div>
+                <div class="flex justify-between items-center text-xl font-extrabold">
+                    <span>Subtotal:</span>
+                    <span id="cartTotalPrice">IDR 0</span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="clearAllCart()" class="flex-1 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold hover:bg-red-100 dark:hover:bg-red-900/30 transition border border-red-200 dark:border-red-800">
+                        <i class="fa-solid fa-trash-alt mr-2"></i>Kosongkan
+                    </button>
+                    <button onclick="proceedCheckout()" class="flex-1 py-3 rounded-2xl bg-brand-600 text-white font-bold hover:bg-brand-700 transition">
+                        Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Hero Section -->
+        <section class="relative rounded-[2rem] overflow-hidden mb-12 bg-slate-900 text-white py-16 px-10">
+            <div class="absolute inset-0 opacity-40">
+                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover" alt="Hero Background">
+            </div>
+            <div class="relative z-10 max-w-2xl">
+                <h2 class="text-5xl font-extrabold mb-4">Eksplorasi Gaya Baru</h2>
+                <p class="text-slate-300 text-lg mb-8">Koleksi gadget dan fashion premium dengan chat langsung ke penjual.</p>
+                <button class="bg-brand-600 hover:bg-brand-700 px-8 py-4 rounded-2xl font-bold transition">Lihat Promo</button>
+            </div>
+        </section>
+
+        <!-- Category Tabs -->
+        <div class="mb-10">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Kategori Produk</h3>
+            <div class="flex flex-wrap gap-3" id="categoryTabs">
+                <button onclick="filterCategory('All')" class="cat-btn active px-6 py-3 rounded-2xl bg-brand-600 text-white font-semibold transition-all shadow-lg shadow-brand-600/20">Semua</button>
+                <button onclick="filterCategory('Tas')" class="cat-btn px-6 py-3 rounded-2xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border font-semibold hover:border-brand-600 transition-all">Tas</button>
+                <button onclick="filterCategory('Sepatu')" class="cat-btn px-6 py-3 rounded-2xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border font-semibold hover:border-brand-600 transition-all">Sepatu</button>
+                <button onclick="filterCategory('Jam Tangan')" class="cat-btn px-6 py-3 rounded-2xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border font-semibold hover:border-brand-600 transition-all">Jam Tangan</button>
+                <button onclick="filterCategory('Laptop')" class="cat-btn px-6 py-3 rounded-2xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border font-semibold hover:border-brand-600 transition-all">Laptop</button>
+                <button onclick="filterCategory('Handphone')" class="cat-btn px-6 py-3 rounded-2xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border font-semibold hover:border-brand-600 transition-all">Handphone</button>
+            </div>
+        </div>
+
+        <!-- Products Header & Sort -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h3 class="text-2xl font-bold" id="categoryTitle">Semua Produk</h3>
+                <p class="text-slate-500 text-sm">Menampilkan koleksi terbaik untuk Anda</p>
+            </div>
+
+            <div class="flex items-center gap-3 bg-white dark:bg-dark-card p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-dark-border">
+                <span class="text-[10px] font-bold text-slate-400 ml-3 uppercase tracking-tighter">Urutkan</span>
+                <select id="sortSelect" onchange="fetchProducts()" class="bg-transparent py-2 px-4 rounded-xl text-sm font-bold focus:outline-none cursor-pointer">
+                    <option value="default">Default (A-Z)</option>
+                    <option value="newest">Terbaru</option>
+                    <option value="oldest">Terlama</option>
+                    <option value="price_asc">Termurah</option>
+                    <option value="price_desc">Termahal</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Products will be rendered here -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-dark-card border-t border-slate-200 dark:border-dark-border mt-20 py-12 text-center">
+        <p class="text-slate-500 font-medium">&copy; 2026 Nexus Retail Group. All Rights Reserved.</p>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 max-w-xs"></div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <!-- Chatbot Button -->
+        <button class="chatbot-button" id="chatbot-toggle" onclick="toggleChatbot()" title="Chat with Nexus Assistant">
+            💬
+        </button>
+
+        <!-- Chatbot Window -->
+        <div id="nexus-chatbot">
+            <!-- Header -->
+            <div class="chatbot-header">
+                <div>
+                    <h3>🤖 Nexus Assistant</h3>
+                    <small style="font-size: 11px; opacity: 0.8;">Online</small>
+                </div>
+                <div class="chatbot-header-actions">
+                    <button class="chatbot-header-btn" onclick="clearChatbotHistory()" title="Clear history">
+                        🗑️
+                    </button>
+                    <button class="chatbot-header-btn" onclick="toggleChatbot()" title="Close">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div id="chatbot-messages"></div>
+
+            <!-- Input Area -->
+            <div class="chatbot-input-area">
+                <input 
+                    type="text"
+                    id="chatbot-input"
+                    placeholder="Tanya tentang produk..."
+                    onkeypress="handleChatbotKeypress(event)"
+                >
+                <button class="chatbot-send-btn" onclick="sendChatbotMessage()" title="Send">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Styles -->
+    <style>
+        .chatbot-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+
+        .chatbot-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+        }
+
+        .chatbot-button.active {
+            display: none;
+        }
+
+        #nexus-chatbot {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 40px);
+            height: 600px;
+            max-height: calc(100vh - 140px);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95) translateY(20px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            z-index: 999;
+        }
+
+        .dark #nexus-chatbot {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+
+        #nexus-chatbot.chatbot-open {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chatbot-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .chatbot-header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f8fafc;
+        }
+
+        .dark #chatbot-messages {
+            background: #0f172a;
+        }
+
+        .chatbot-message {
+            display: flex;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .user-message .message-content {
+            background: #4f46e5;
+            color: white;
+            border-radius: 12px 4px 12px 12px;
+        }
+
+        .bot-message .message-content {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px 12px 12px 12px;
+        }
+
+        .dark .bot-message .message-content {
+            background: #334155;
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+
+        .chatbot-input-area {
+            border-top: 1px solid #e2e8f0;
+            padding: 12px;
+            background: white;
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .dark .chatbot-input-area {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        #chatbot-input {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            max-height: 100px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .dark #chatbot-input {
+            background: #334155;
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+
+        #chatbot-input:focus {
+            border-color: #4f46e5;
+        }
+
+        .chatbot-send-btn {
+            background: #4f46e5;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .chatbot-send-btn:hover {
+            background: #4338ca;
+        }
+
+        .chatbot-send-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 480px) {
+            #nexus-chatbot {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 140px);
+                bottom: 80px;
+                right: 20px;
+                left: 20px;
+                max-width: none;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+
+        #chatbot-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatbot-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .dark #chatbot-messages::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="./js/config.js"></script>
+    <script src="./js/products.js"></script>
+    <script src="./js/cart.js"></script>
+    <script src="./js/ui.js"></script>
+    <script src="./js/auth.js"></script>
+    <script src="./js/chat.js"></script>
+    <script src="./js/chat-ui.js"></script>
+    <script src="./js/login-ui.js"></script>
+    <script src="./js/price-manager.js"></script>
+    <script src="./js/chatbot-assistant.js"></script>
+    <script src="./js/app-with-chat.js"></script>
+    <script src="./js/chatbot-intelligent-pro-v4.js"></script>
+
+    <!-- Chatbot Initialization Script -->
+    <script>
+        function handleChatbotKeypress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatbotMessage();
+            }
+        }
+
+        function sendChatbotMessage() {
+            const input = document.getElementById('chatbot-input');
+            if (!input) return;
+
+            const message = input.value.trim();
+            if (!message) return;
+
+            handleChatbotInput(message);
+            input.value = '';
+            input.focus();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeChatbot();
+        });
+    </script>
+</body>
+
+</html>
